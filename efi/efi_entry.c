@@ -11,7 +11,15 @@
  * @param SystemTable address of the UEFI system table, containing all services by UEFI.
  * @return 
  */
-EFI_STATUS EFIAPI EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     InitializeLib(ImageHandle, SystemTable);
+
+    EFI_STATUS status = uefi_call_wrapper(SystemTable->ConOut->ClearScreen, 1, SystemTable->ConOut);
+    if (EFI_ERROR(status)) {                                /* clears the predefined logo */
+        Print(L"[%d] Status: %r\r\n", __LINE__, status);    /* print the error message */
+        return status;
+    }
+    
+    while (1);
     return 0;
 }

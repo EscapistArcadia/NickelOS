@@ -25,8 +25,9 @@ EFI_OBJS += $(patsubst %.c,%.o,$(filter %.c,$(EFI_SRCS)))
 EFI_SO := $(EFI_DIR)/bootx64.so
 EFI_LOADER := $(EFI_DIR)/bootx64.efi
 
-all: efi
-	$(info $(EFI_CFLAGS))
+FILE_SYSTEM_IMAGE := filesys.img
+
+all: efi filesys
 
 $(EFI_DIR)/%.o: $(EFI_DIR)/%.c
 	$(CC) $(EFI_CFLAGS) -c $< -o $@
@@ -36,5 +37,15 @@ efi: $(EFI_OBJS)
 	$(LD) $(EFI_LDFLAGS) $(EFI_OBJS) -o $(EFI_SO) -lgnuefi -lefi
 	objcopy -j .text -j .sdata -j .data -j .rodata -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-$(ARCH) --subsystem=10 $(EFI_SO) $(EFI_LOADER)
 
+filesys:
+	dd if=/dev/zero of=$(FILE_SYSTEM_IMAGE) bs=512 count=524288
+	mkfs.fat -F 32 $(FILE_SYSTEM_IMAGE)
+	mmd -i $(FILE_SYSTEM_IMAGE) ::/EFI
+	mmd -i $(FILE_SYSTEM_IMAGE) ::/EFI/BOOT
+	mcopy -i $(FILE_SYSTEM_IMAGE) $(EFI_LOADER) ::/EFI/BOOT/BOOTX64.EFI
+
+run:
+	qemu-system-$(ARCH) -drive format=raw,file=$(FILE_SYSTEM_IMAGE) -bios /usr/share/ovmf/OVMF.fd
+
 clean:
-	rm -f $(EFI_OBJS) $(EFI_SO) $(EFI_LOADER)
+	rm -f $(EFI_OBJS) $(EFI_SO) $(EFI_LOADER) $(FILE_SYSTEM_IMAGE)
