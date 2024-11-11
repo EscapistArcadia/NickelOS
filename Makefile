@@ -33,6 +33,7 @@ $(EFI_DIR)/%.o: $(EFI_DIR)/%.c
 	$(CC) $(EFI_CFLAGS) -c $< -o $@
 
 # uefi bootloader
+# reference: https://wiki.osdev.org/GNU-EFI
 efi: $(EFI_OBJS)
 	$(LD) $(EFI_LDFLAGS) $(EFI_OBJS) -o $(EFI_SO) -lgnuefi -lefi
 	objcopy -j .text -j .sdata -j .data -j .rodata -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-$(ARCH) --subsystem=10 $(EFI_SO) $(EFI_LOADER)
