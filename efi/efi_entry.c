@@ -79,25 +79,8 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
         return status;
     }
 
-    UINTN mem_map_size = 0, mem_map_key = 0, mem_desc_size = 0;
-    UINT32 mem_desc_ver = 0;
-    EFI_MEMORY_DESCRIPTOR *mem_map_descs = NULL;
-    status = uefi_call_wrapper(SystemTable->BootServices->GetMemoryMap, 5, &mem_map_size, mem_map_descs, &mem_map_key, &mem_desc_size, &mem_desc_ver);
-    if (status != EFI_BUFFER_TOO_SMALL) {                   /* memory map key to exit boot service */
-        Print(L"[%d] Status: %r\r\n", __LINE__, status);
-        return status;
-    }
-
-    /* If I call GetMemoryMap twice, mem_map_key is reported invalid, why? */
-    status = uefi_call_wrapper(SystemTable->BootServices->ExitBootServices, 2, ImageHandle, mem_map_key);
-    if (EFI_ERROR(status)) {
-        Print(L"[%d] Status: %r\r\n", __LINE__, status);
-        return status;
-    }
-
     Elf64_Ehdr *kernel_header = (Elf64_Ehdr *)kernel_address;
     void (*NickelMain)() = (void (*)())(kernel_header->e_entry);
-    NickelMain();                                           /* never returns, hopefully */
 
     EFI_GRAPHICS_OUTPUT_PROTOCOL *graphics_protocol = NULL;
     status = uefi_call_wrapper(SystemTable->BootServices->LocateProtocol, 3, &gEfiGraphicsOutputProtocolGuid, NULL, &graphics_protocol);
@@ -114,15 +97,33 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
             Print(L"[%d] Status: %r\r\n", __LINE__, status);/* TODO: store user-specified screen resolution */
             return status;
         }
-        // if (info->HorizontalResolution == 1920 && info->VerticalResolution == 1080) {
-        //     status = uefi_call_wrapper(graphics_protocol->SetMode, 2, graphics_protocol, i);
-        //     if (EFI_ERROR(status)) {                        /* set the mode */
-        //         Print(L"[%d] Status: %r\r\n", __LINE__, status);
-        //         return status;
-        //     }
-        //     break;
-        // }
+        if (info->HorizontalResolution == 1920 && info->VerticalResolution == 1080) {
+            status = uefi_call_wrapper(graphics_protocol->SetMode, 2, graphics_protocol, i);
+            if (EFI_ERROR(status)) {                        /* set the mode */
+                Print(L"[%d] Status: %r\r\n", __LINE__, status);
+                return status;
+            }
+            break;
+        }
     }
+
+    UINTN mem_map_size = 0, mem_map_key = 0, mem_desc_size = 0;
+    UINT32 mem_desc_ver = 0;
+    EFI_MEMORY_DESCRIPTOR *mem_map_descs = NULL;
+    status = uefi_call_wrapper(SystemTable->BootServices->GetMemoryMap, 5, &mem_map_size, mem_map_descs, &mem_map_key, &mem_desc_size, &mem_desc_ver);
+    if (status != EFI_BUFFER_TOO_SMALL) {                   /* memory map key to exit boot service */
+        Print(L"[%d] Status: %r\r\n", __LINE__, status);
+        return status;
+    }
+
+    /* If I call GetMemoryMap twice, mem_map_key is reported invalid, why? */
+    status = uefi_call_wrapper(SystemTable->BootServices->ExitBootServices, 2, ImageHandle, mem_map_key);
+    if (EFI_ERROR(status)) {
+        Print(L"[%d] Status: %r\r\n", __LINE__, status);
+        return status;
+    }
+    
+    NickelMain();                                           /* never returns, hopefully */
 
     while (1);
     return 0;
