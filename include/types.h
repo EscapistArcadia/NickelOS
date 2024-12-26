@@ -4,17 +4,17 @@
 #if defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(__amd64)
 #define NICKEL_X86
 #define NICKEL_X86_64
-#define NICKEL_64BIT
+#define NICKEL_64BITS
 #elif defined(__i386) || defined(__i386) || defined(i386)
 #define NICKEL_X86
-#define NICKEL_32BIT
+#define NICKEL_32BITS
 #elif defined(__aarch64__)
 #define NICKEL_ARM
 #define NICKEL_ARM64
-#define NICKEL_64BIT
+#define NICKEL_64BITS
 #elif defined(__arm__)
 #define NICKEL_ARM
-#define NICKEL_32BIT
+#define NICKEL_32BITS
 #elif defined(__mips__) || defined(mips)
 #define NICKEL_MIPS
 #endif
