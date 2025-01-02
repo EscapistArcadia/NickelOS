@@ -24,18 +24,19 @@ EFI_OBJS += $(patsubst %.s,%.o,$(filter %.s,$(EFI_SRCS))) $(patsubst %.c,%.o,$(f
 EFI_SO := $(EFI_DIR)/bootx64.so
 EFI_LOADER := $(EFI_DIR)/bootx64.efi
 
-KERNEL_CFLAGS += -g -Wall -fno-builtin -fno-stack-protector -mno-red-zone -nostdlib -m64 $(KERNEL_INCLUDE)
-KERNEL_LDFLAGS += -ffreestanding -nostdlib -static
-
 KERNEL_DIR := ./kernel
+KERNEL_ARCH_DIR := ./arch/$(ARCH)
 KERNEL_LINKER := $(KERNEL_DIR)/linker.ld
 KERNEL_IMAGE := ./Nickel.elf
 KERNEL_BINARY := ./Nickel.bin
 
-KERNEL_SRCS += $(shell find $(KERNEL_DIR) -name '*.s') $(shell find $(KERNEL_DIR) -name '*.c')
-KERNEL_OBJS += $(patsubst %.s,%.o,$(filter %.s,$(KERNEL_SRCS))) $(patsubst %.c,%.o,$(filter %.c,$(KERNEL_SRCS)))
+KERNEL_SRCS += $(shell find $(KERNEL_DIR) -name '*.s') $(shell find $(KERNEL_DIR) -name '*.c') $(shell find $(KERNEL_ARCH_DIR) -name '*.s') $(shell find $(KERNEL_ARCH_DIR) -name '*.c')
+KERNEL_OBJS += $(patsubst %.s,%.o,$(filter %.s,$(KERNEL_SRCS))) $(patsubst %.c,%.o,$(filter %.c,$(KERNEL_SRCS))) 
 KERNEL_INCLUDE += -I ./include
 KERNEL_INCLUDE += -I ./arch/$(ARCH)/include
+
+KERNEL_CFLAGS += -g -Wall -fno-builtin -fno-stack-protector -mno-red-zone -nostdlib -m64 $(KERNEL_INCLUDE)
+KERNEL_LDFLAGS += -ffreestanding -nostdlib -static
 
 FILE_SYSTEM_IMAGE := filesys.img
 
@@ -45,6 +46,9 @@ $(EFI_DIR)/%.o: $(EFI_DIR)/%.c
 	$(CC) $(EFI_CFLAGS) -c $< -o $@
 
 $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
+
+./arch/$(ARCH)/%.o: ./arch/$(ARCH)/%.c
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
 # uefi bootloader

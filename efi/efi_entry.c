@@ -4,7 +4,7 @@
 
 struct boot_info {
     void *rsdp;                                                     /* root rsdp pointer */
-    void *rsdp2;                                                    /* root rsdp pointer */
+    void *xsdp;                                                    /* root rsdp pointer */
     struct {
         UINTN width;                                                /* screen width */
         UINTN height;                                               /* screen height */
@@ -42,7 +42,7 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
     EFI_GUID Acpi20TableGuid = ACPI_20_TABLE_GUID;                  /* ACPI 2.0 table GUID, not founded */
     for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; ++i) { /* find the root rsdp 2.0 at first, then 1.0 */
         if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &Acpi20TableGuid) == 0) {
-            boot_info.rsdp2 = (struct rsdp *)SystemTable->ConfigurationTable[i].VendorTable;
+            boot_info.xsdp = (struct rsdp *)SystemTable->ConfigurationTable[i].VendorTable;
         } else if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &AcpiTableGuid) == 0) {
             boot_info.rsdp = (struct rsdp *)SystemTable->ConfigurationTable[i].VendorTable;
         }
